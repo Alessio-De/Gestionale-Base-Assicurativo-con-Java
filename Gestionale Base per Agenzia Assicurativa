@@ -1,0 +1,156 @@
+// Classe principale per rappresentare una polizza assicurativa
+public class Polizza {
+    private String numeroPolizza;
+    private Cliente cliente;
+    private TipologiaAssicurazione tipologia;
+    private double premio;
+    private StatoPolizza stato;
+    private Date dataInizio;
+    private Date dataScadenza;
+
+    // Costruttore completo
+    public Polizza(String numeroPolizza, Cliente cliente, TipologiaAssicurazione tipologia, 
+                   double premio, Date dataInizio, Date dataScadenza) {
+        this.numeroPolizza = numeroPolizza;
+        this.cliente = cliente;
+        this.tipologia = tipologia;
+        this.premio = premio;
+        this.stato = StatoPolizza.ATTIVA;
+        this.dataInizio = dataInizio;
+        this.dataScadenza = dataScadenza;
+    }
+
+    // Metodi getter e setter
+    // ... (implementazione standard)
+
+    // Metodo per rinnovare la polizza
+    public void rinnova(Date nuovaScadenza) {
+        this.dataScadenza = nuovaScadenza;
+        this.stato = StatoPolizza.ATTIVA;
+    }
+
+    // Metodo per calcolare il premio in base a parametri specifici
+    public double calcolaPremio() {
+        // Logica di calcolo personalizzata
+        return premio;
+    }
+}
+
+// Enumerazione per gli stati della polizza
+enum StatoPolizza {
+    ATTIVA, SCADUTA, SOSPESA, CANCELLATA
+}
+
+// Classe per rappresentare i clienti
+public class Cliente {
+    private String codiceFiscale;
+    private String nome;
+    private String cognome;
+    private String email;
+    private String telefono;
+    private List<Polizza> polizze;
+
+    // Costruttore
+    public Cliente(String codiceFiscale, String nome, String cognome, 
+                   String email, String telefono) {
+        this.codiceFiscale = codiceFiscale;
+        this.nome = nome;
+        this.cognome = cognome;
+        this.email = email;
+        this.telefono = telefono;
+        this.polizze = new ArrayList<>();
+    }
+
+    // Metodo per aggiungere una nuova polizza
+    public void aggiungiPolizza(Polizza polizza) {
+        polizze.add(polizza);
+    }
+}
+
+// Enumerazione per tipologie di assicurazione
+enum TipologiaAssicurazione {
+    AUTO, CASA, VITA, INFORTUNI, RESPONSABILITA_CIVILE
+}
+
+// Classe per gestire le operazioni principali
+public class GestoreAssicurazioni {
+    private List<Polizza> polizze;
+    private List<Cliente> clienti;
+
+    public GestoreAssicurazioni() {
+        polizze = new ArrayList<>();
+        clienti = new ArrayList<>();
+    }
+
+    // Metodo per registrare un nuovo cliente
+    public void registraCliente(Cliente cliente) {
+        clienti.add(cliente);
+    }
+
+    // Metodo per creare una nuova polizza
+    public Polizza creaNuovaPolizza(Cliente cliente, TipologiaAssicurazione tipo, 
+                                    double premio, Date inizio, Date scadenza) {
+        String numeroPolizza = generaNumeroPolizza();
+        Polizza nuovaPolizza = new Polizza(numeroPolizza, cliente, tipo, premio, inizio, scadenza);
+        polizze.add(nuovaPolizza);
+        cliente.aggiungiPolizza(nuovaPolizza);
+        return nuovaPolizza;
+    }
+
+    // Metodo per generare un numero polizza univoco
+    private String generaNumeroPolizza() {
+        return "POL-" + UUID.randomUUID().toString().substring(0, 8);
+    }
+
+    // Metodo per trovare polizze in scadenza
+    public List<Polizza> trovaPolizzeInScadenza(int giorniPrimaScadenza) {
+        Date oggi = new Date();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(oggi);
+        cal.add(Calendar.DAY_OF_YEAR, giorniPrimaScadenza);
+        
+        return polizze.stream()
+            .filter(p -> p.getDataScadenza().before(cal.getTime()) && 
+                         p.getStato() == StatoPolizza.ATTIVA)
+            .collect(Collectors.toList());
+    }
+}
+
+// Classe per la gestione dei sinistri
+public class Sinistro {
+    private String numeroSinistro;
+    private Polizza polizza;
+    private Date dataSinistro;
+    private String descrizione;
+    private StatoSinistro stato;
+
+    // Costruttore e metodi
+    public Sinistro(Polizza polizza, Date dataSinistro, String descrizione) {
+        this.numeroSinistro = "SIN-" + UUID.randomUUID().toString().substring(0, 8);
+        this.polizza = polizza;
+        this.dataSinistro = dataSinistro;
+        this.descrizione = descrizione;
+        this.stato = StatoSinistro.APERTO;
+    }
+}
+
+// Enumerazione per gli stati del sinistro
+enum StatoSinistro {
+    APERTO, IN_VALUTAZIONE, LIQUIDATO, RESPINTO
+}
+
+// Classe principale per avviare l'applicazione
+public class MainAssicurazioni {
+    public static void main(String[] args) {
+        GestoreAssicurazioni gestore = new GestoreAssicurazioni();
+        
+        // Esempio di utilizzo
+        Cliente nuovoCliente = new Cliente("RSSMRA80A01H501U", "Mario", "Rossi", 
+                                           "mario.rossi@email.com", "3331234567");
+        gestore.registraCliente(nuovoCliente);
+        
+        Polizza nuovaPolizza = gestore.creaNuovaPolizza(nuovoCliente, 
+            TipologiaAssicurazione.AUTO, 500.00, new Date(), 
+            Calendar.getInstance().getTime());
+    }
+}
